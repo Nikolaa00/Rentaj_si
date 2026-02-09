@@ -1,0 +1,195 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  RENTER
+  DEALER
+}
+
+enum CarStatus {
+  AVAILABLE
+  RENTED
+}
+
+enum CarType {
+  SUV
+  CROSSOVER
+  WAGON
+  FAMILIY_MBP
+  SPORT_SUPERCAR
+  COMPACT
+  COUPE
+  PICK_UP
+  SEDAN
+  LIMOUSEINE
+  CONVERTABLE
+}
+
+enum TransmissionType {
+  MANUAL
+  AUTOMATIC
+}
+
+enum FuelType {
+  PETROL
+  DIESEL
+  ELECTRIC
+  HYBRID
+}
+
+enum CarCondition {
+  NEW
+  USED
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+model User {
+  
+  id           String   @id @default(uuid())
+  fullName     String   @map("full_name")
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         UserRole @default(RENTER)
+  location     String?  @default("Bitola")
+
+  isVerified Boolean @default(false)
+  isActive   Boolean @default(true)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  carsOwned      Car[]     @relation("DealerCars")
+  bookings       Booking[] @relation("RenterBookings")
+  dealerBookings Booking[] @relation("DealerBookings")
+
+  @@index([email])
+  @@index([role])
+  @@index([isVerified])
+  @@map("users")
+}
+
+model Car {
+  id       String @id @default(uuid())
+  dealerId String @map("dealer_id")
+  renterId String @map("renter_id")
+
+  title             String
+  make              String
+  model             String
+  year              Int
+  carType           CarType      @map("car_type")
+  firstRegistration DateTime?    @map("first_registration")
+  price             Decimal      @db.Decimal(10, 2)
+  pricePerDay       Decimal      @map("price_per_day") @db.Decimal(10, 2)
+  mileage           Int? 
+  condition         CarCondition @default(USED)
+  status            CarStatus    @default(AVAILABLE)
+
+  transmission    TransmissionType
+  fuelType        FuelType         @map("fuel_type")
+  driveType       String           @map("drive_type") @db.VarChar(50)
+  performance     String? 
+  engineCapacity  String?          @map("engine_capacity") 
+  cylinders       Int?
+  emissionClass   String?          @map("emission_class") 
+  fuelConsumption String?          @map("fuel_consumption") 
+  validHUUntil    DateTime?        @map("valid_hu_until") 
+
+
+  seats          Int  @default(5)
+  doors          Int  @default(4)
+  weight         Int? 
+  towingCapacity Int? @map("towing_capacity") 
+
+  
+  color    String?
+  interior String?
+
+  
+  availableFrom  DateTime  @map("available_from")
+  availableTo    DateTime? @map("available_to")
+  pickupLocation String    @map("pickup_location")
+  DealerName     String?   @map("company_name")
+
+  
+  comfortFeatures          String[] @map("comfort_features") 
+  safetyFeatures           String[] @map("safety_features") 
+  technologyFeatures       String[] @map("technology_features")
+  lightingFeatures         String[] @map("lighting_features") 
+  driverAssistanceFeatures String[] @map("driver_assistance_features") 
+  otherFeatures            String[] @map("other_features") 
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  dealer   User       @relation("DealerCars", fields: [dealerId], references: [id], onDelete: Cascade)
+  images   CarImage[]
+  bookings Booking[]
+
+  @@index([dealerId])
+  @@index([carType])
+  @@index([make, model])
+  @@index([pricePerDay])
+  @@index([createdAt])
+  @@map("cars")
+  @@index([status])
+}
+
+model CarImage {
+  id        String   @id @default(uuid())
+  carId     String   @map("car_id")
+  url       String
+  altText   String?  @map("alt_text")
+  order     Int      @default(0) 
+  isPrimary Boolean  @default(false) @map("is_primary")
+  createdAt DateTime @default(now()) @map("created_at")
+  car       Car      @relation(fields: [carId], references: [id], onDelete: Cascade)
+
+  @@index([carId])
+  @@index([carId, isPrimary])
+  @@map("car_images")
+}
+
+model Booking {
+  id       String @id @default(uuid())
+  renterId String @map("renter_id")
+  dealerId String @map("dealer_id")
+  carId    String @map("car_id")
+
+  pickUpDate DateTime @map("pick_up_date")
+  returnDate DateTime @map("return_date")
+
+  pickupLocation String  @map("pickup_location")
+  returnLocation String? @map("return_location")
+  totalPrice Decimal @map("total_price") @db.Decimal(10, 2)
+
+
+  status           BookingStatus @default(CONFIRMED)
+  cancellationDate DateTime?     @map("cancellation_date")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  
+  renter User @relation("RenterBookings", fields: [renterId], references: [id], onDelete: Cascade)
+  dealer User @relation("DealerBookings", fields: [dealerId], references: [id], onDelete: Cascade)
+  car    Car  @relation(fields: [carId], references: [id], onDelete: Cascade)
+
+  @@index([renterId])
+  @@index([dealerId])
+  @@index([carId])
+  @@index([status])
+  @@index([pickUpDate, returnDate]) 
+  @@index([createdAt])
+  @@map("bookings")
+}

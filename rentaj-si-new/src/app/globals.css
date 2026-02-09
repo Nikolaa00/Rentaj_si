@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+
+:root {
+  --font-sans: "Poppins", Arial, Helvetica, sans-serif;
+  --font-mono: monospace;
+  --radius: 0.625rem;
+  --background: oklch(0% 0 0);
+  --foreground: oklch(100% 0.00011 271.152);
+  --color-MY-palatte-Color: #6FB3DD;
+  --color-MY-palatte-2: #55627D;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+
+
+
+body {
+  font-family: var(--font-sans);
+}
+
+a {
+  text-decoration: none;
+}
+
+@keyframes open {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes close {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+.animate-open {
+  animation: open 0.2s ease-out forwards;
+}
+
+.animate-close {
+  animation: close 0.15s ease-in forwards;
+}
